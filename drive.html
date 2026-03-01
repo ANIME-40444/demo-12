@@ -3,126 +3,81 @@
 <head>
   <meta charset="UTF-8" />
   <title>Drive Upload Demo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
   <style>
     body {
-      background: #0f0f0f;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
+      background:#0f0f0f;
+      color:#fff;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      font-family:Arial;
     }
-
-    .card {
-      background: #1c1c1c;
-      padding: 30px;
-      border-radius: 12px;
-      width: 320px;
-      text-align: center;
-      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    .box {
+      background:#1c1c1c;
+      padding:25px;
+      border-radius:12px;
+      width:320px;
+      text-align:center;
     }
-
-    h2 {
-      margin-bottom: 20px;
-    }
-
-    input[type="file"] {
-      width: 100%;
-      margin-bottom: 15px;
-      color: #ccc;
-    }
-
     button {
-      width: 100%;
-      padding: 12px;
-      background: #6c4cff;
-      border: none;
-      color: white;
-      font-size: 16px;
-      border-radius: 8px;
-      cursor: pointer;
+      margin-top:15px;
+      padding:10px;
+      width:100%;
+      background:#6c4cff;
+      border:none;
+      color:#fff;
+      border-radius:8px;
+      font-size:16px;
     }
-
-    button:disabled {
-      background: #444;
-      cursor: not-allowed;
-    }
-
-    .status {
-      margin-top: 15px;
-      font-size: 14px;
-    }
-
-    .success {
-      color: #00ff9c;
-    }
-
-    .error {
-      color: #ff4d4d;
-    }
-
-    .loading {
-      color: #ffaa00;
-    }
+    #msg { margin-top:10px; }
   </style>
 </head>
-
 <body>
-  <div class="card">
-    <h2>📤 Drive Upload Demo</h2>
 
-    <input type="file" id="fileInput" />
-    <button onclick="uploadFile()">Upload Video</button>
+<div class="box">
+  <h3>Drive Upload Demo</h3>
+  <input type="file" id="file" />
+  <button onclick="upload()">Upload</button>
+  <div id="msg"></div>
+</div>
 
-    <div class="status" id="status"></div>
-  </div>
+<script>
+async function upload(){
+  const file = document.getElementById("file").files[0];
+  if(!file){
+    msg.innerText = "No file selected";
+    return;
+  }
 
-  <script>
-    async function uploadFile() {
-      const fileInput = document.getElementById("fileInput");
-      const status = document.getElementById("status");
-      const button = document.querySelector("button");
+  const form = new FormData();
+  form.append("file", file);
 
-      if (!fileInput.files.length) {
-        status.innerHTML = "<span class='error'>❌ Please select a file</span>";
-        return;
+  msg.innerText = "Uploading...";
+
+  try {
+    const res = await fetch(
+      "https://drive-backend-hiws.onrender.com/upload",
+      {
+        method: "POST",
+        body: form
       }
+    );
+    const data = await res.json();
 
-      const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
-
-      status.innerHTML = "<span class='loading'>⏳ Uploading...</span>";
-      button.disabled = true;
-
-      try {
-        const res = await fetch(
-          "https://drive-backend-wqwd.onrender.com/upload",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        const data = await res.json();
-
-        if (data.success) {
-          status.innerHTML = `
-            <span class="success">✅ Upload Success</span><br><br>
-            <a href="${data.viewLink}" target="_blank" style="color:#6c9cff">View File</a>
-          `;
-        } else {
-          throw new Error(data.error || "Upload failed");
-        }
-      } catch (err) {
-        status.innerHTML = `<span class="error">❌ ${err.message}</span>`;
-      } finally {
-        button.disabled = false;
-      }
+    if(data.success){
+      msg.innerHTML = `
+        ✅ Uploaded <br>
+        <a href="${data.viewLink}" target="_blank">View File</a>
+      `;
+    } else {
+      msg.innerText = "❌ Upload failed";
     }
-  </script>
+  } catch (e) {
+    msg.innerText = "❌ Failed to fetch";
+  }
+}
+</script>
+
 </body>
 </html>
