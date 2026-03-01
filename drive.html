@@ -17,7 +17,7 @@
       background:#1c1c1c;
       padding:25px;
       border-radius:12px;
-      width:320px;
+      width:340px;
       text-align:center;
     }
     button {
@@ -29,8 +29,13 @@
       color:#fff;
       border-radius:8px;
       font-size:16px;
+      cursor:pointer;
     }
-    #msg { margin-top:10px; }
+    #msg {
+      margin-top:12px;
+      font-size:14px;
+      word-break: break-word;
+    }
   </style>
 </head>
 <body>
@@ -43,17 +48,23 @@
 </div>
 
 <script>
+const msg = document.getElementById("msg");
+
 async function upload(){
-  const file = document.getElementById("file").files[0];
+  const fileInput = document.getElementById("file");
+  const file = fileInput.files[0];
+
   if(!file){
-    msg.innerText = "No file selected";
+    msg.style.color = "orange";
+    msg.innerText = "⚠️ No file selected";
     return;
   }
 
   const form = new FormData();
   form.append("file", file);
 
-  msg.innerText = "Uploading...";
+  msg.style.color = "#aaa";
+  msg.innerText = "⏳ Uploading...";
 
   try {
     const res = await fetch(
@@ -63,18 +74,36 @@ async function upload(){
         body: form
       }
     );
-    const data = await res.json();
 
-    if(data.success){
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error("Invalid JSON response from server");
+    }
+
+    if (!res.ok) {
+      throw new Error(data.error || `HTTP Error ${res.status}`);
+    }
+
+    if (data.success) {
+      msg.style.color = "lightgreen";
       msg.innerHTML = `
-        ✅ Uploaded <br>
-        <a href="${data.viewLink}" target="_blank">View File</a>
+        ✅ Upload successful<br>
+        <a href="${data.viewLink}" target="_blank" style="color:#6c4cff">
+          View File
+        </a>
       `;
     } else {
-      msg.innerText = "❌ Upload failed";
+      throw new Error(data.error || "Unknown upload error");
     }
-  } catch (e) {
-    msg.innerText = "❌ Failed to fetch";
+
+  } catch (err) {
+    msg.style.color = "red";
+    msg.innerHTML = `
+      ❌ Upload failed<br>
+      <small>${err.message}</small>
+    `;
   }
 }
 </script>
