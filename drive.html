@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Drive Upload Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  body {
+    background: #0f0f14;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .box {
+    background: #181820;
+    padding: 20px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 350px;
+    text-align: center;
+    box-shadow: 0 0 25px rgba(0,0,0,.6);
+  }
+
+  h2 {
+    margin-bottom: 15px;
+  }
+
+  input[type="file"] {
+    width: 100%;
+    margin-bottom: 15px;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    background: #6c3cff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .status {
+    margin-top: 15px;
+    font-size: 14px;
+  }
+
+  a {
+    color: #4da6ff;
+    word-break: break-all;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>🎬 Drive Upload Demo</h2>
+
+  <input type="file" id="videoFile" accept="video/*">
+
+  <button onclick="uploadVideo()">Upload Video</button>
+
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+async function uploadVideo() {
+  const fileInput = document.getElementById("videoFile");
+  const status = document.getElementById("status");
+
+  if (!fileInput.files.length) {
+    alert("ভিডিও সিলেক্ট কর");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", fileInput.files[0]);
+
+  status.innerHTML = "Uploading... ⏳";
+  
+  try {
+    const res = await fetch(
+      "https://drive-backend-97p2.onrender.com/upload",
+      {
+        method: "POST",
+        body: formData
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      status.innerHTML = `
+        ✅ Upload Successful <br><br>
+        <b>View:</b><br>
+        <a href="${data.viewLink}" target="_blank">${data.viewLink}</a><br><br>
+        <b>Download:</b><br>
+        <a href="${data.downloadLink}" target="_blank">${data.downloadLink}</a>
+      `;
+    } else {
+      status.innerHTML = "❌ Upload Failed";
+    }
+  } catch (err) {
+    console.error(err);
+    status.innerHTML = "❌ Server Error";
+  }
+}
+</script>
+
+</body>
+  </html>
