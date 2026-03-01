@@ -1,56 +1,128 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>Drive Upload Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <style>
+    body {
+      background: #0f0f0f;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      background: #1c1c1c;
+      padding: 30px;
+      border-radius: 12px;
+      width: 320px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      margin-bottom: 15px;
+      color: #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #6c4cff;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background: #444;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .success {
+      color: #00ff9c;
+    }
+
+    .error {
+      color: #ff4d4d;
+    }
+
+    .loading {
+      color: #ffaa00;
+    }
+  </style>
 </head>
-<body style="background:#111;color:#fff;text-align:center;padding:50px">
 
-  <h2>Drive Upload Demo</h2>
+<body>
+  <div class="card">
+    <h2>📤 Drive Upload Demo</h2>
 
-  <input type="file" id="fileInput" />
-  <br><br>
+    <input type="file" id="fileInput" />
+    <button onclick="uploadFile()">Upload Video</button>
 
-  <button onclick="upload()">Upload Video</button>
-
-  <p id="status"></p>
+    <div class="status" id="status"></div>
+  </div>
 
   <script>
-    async function upload() {
-      const file = document.getElementById("fileInput").files[0];
-      if (!file) {
-        alert("Select a file");
+    async function uploadFile() {
+      const fileInput = document.getElementById("fileInput");
+      const status = document.getElementById("status");
+      const button = document.querySelector("button");
+
+      if (!fileInput.files.length) {
+        status.innerHTML = "<span class='error'>❌ Please select a file</span>";
         return;
       }
 
       const formData = new FormData();
-      formData.append("file", file); // 🔴 MUST be "file"
+      formData.append("file", fileInput.files[0]);
 
-      document.getElementById("status").innerText = "Uploading...";
+      status.innerHTML = "<span class='loading'>⏳ Uploading...</span>";
+      button.disabled = true;
 
       try {
         const res = await fetch(
-          "https://drive-backend-97p2.onrender.com/upload",
+          "https://drive-backend-wqwd.onrender.com/upload",
           {
             method: "POST",
-            body: formData
+            body: formData,
           }
         );
 
         const data = await res.json();
 
         if (data.success) {
-          document.getElementById("status").innerHTML =
-            `✅ Uploaded<br><a href="${data.viewLink}" target="_blank">View in Drive</a>`;
+          status.innerHTML = `
+            <span class="success">✅ Upload Success</span><br><br>
+            <a href="${data.viewLink}" target="_blank" style="color:#6c9cff">View File</a>
+          `;
         } else {
-          document.getElementById("status").innerText =
-            "❌ Failed: " + (data.error || "Unknown error");
+          throw new Error(data.error || "Upload failed");
         }
-      } catch (e) {
-        document.getElementById("status").innerText =
-          "❌ Upload Failed (Network / Server)";
+      } catch (err) {
+        status.innerHTML = `<span class="error">❌ ${err.message}</span>`;
+      } finally {
+        button.disabled = false;
       }
     }
   </script>
-
 </body>
 </html>
